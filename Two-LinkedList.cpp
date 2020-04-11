@@ -53,7 +53,6 @@ LinkedList::LinkedList(const LinkedList& copyList)
 	}
 
 	this->_head = new Node(copyList._head->value);
-    //this->_tail = new Node(copyList._tail->value);
 	Node* currentNode = this->_head;
 	Node* currentCopyNode = copyList._head;
 
@@ -63,13 +62,9 @@ LinkedList::LinkedList(const LinkedList& copyList)
         currentNode->next->previous = currentNode;
 		//прокрутка
 		currentCopyNode = currentCopyNode->next;
-//        if(!currentCopyNode->next){
-//            currentNode->next->previous = currentNode;
-//        }
         currentNode = currentNode->next;
 	}
 	this->_tail = currentNode;
-    //currentNode->next = nullptr;//на всякий случай
 }
 
 LinkedList& LinkedList::operator=(const LinkedList& copyList){
@@ -79,7 +74,6 @@ LinkedList& LinkedList::operator=(const LinkedList& copyList){
 	}
 	forceNodeDelete(_head);//удалить весь текущий список
     this->_head = new Node(copyList._head->value);//копирование головы
-    //this->_tail = new Node(copyList._tail->value);
     Node* currentNode = this->_head;
     Node* currentCopyNode = copyList._head;
     while (currentCopyNode->next) {
@@ -88,12 +82,9 @@ LinkedList& LinkedList::operator=(const LinkedList& copyList){
         currentNode->next->previous = currentNode;
         //прокрутка
         currentCopyNode = currentCopyNode->next;
-//        if(!currentCopyNode->next){
-//            currentNode->next->previous = currentNode;
-//        }
         currentNode = currentNode->next;
     }
-    //currentNode->next = nullptr;//на всякий случай
+
     this->_tail = currentNode;
 	return *this;
 }
@@ -143,13 +134,22 @@ LinkedList::Node* LinkedList::getNode(const size_t pos) const
         throw std::out_of_range("Index of required node is"
                                "out of range\n");
 	}
-
-	Node* bufNode = this->_head;
-	for (int i = 0; i < pos; ++i) {
-		bufNode = bufNode->next;
-	}
-
-	return bufNode;
+    else{
+        Node* bufNode;
+        if(pos > _size / 2){
+            bufNode = this->_tail;
+            for(size_t i = 0; i < _size - pos - 1; ++i){
+                bufNode = bufNode->previous;
+            }
+        }
+        else{
+            bufNode = this->_head;
+            for(size_t i = 0; i < pos; ++i){
+                bufNode = bufNode->next;
+            }
+        }
+        return bufNode;
+    }
 }
 
 void LinkedList::insert(const size_t pos, const ValueType& value)
@@ -170,11 +170,7 @@ void LinkedList::insert(const size_t pos, const ValueType& value)
 	    pushBack(value);
 	}
 	else {
-		Node* bufNode = this->_head;
-		for (size_t i = 0; i < pos-1; ++i) {
-			bufNode = bufNode->next;
-		}
-		bufNode->insertNext(value);
+        getNode(pos - 1)->insertNext(value);
 		++_size;
 	}
 }
@@ -199,11 +195,6 @@ void LinkedList::pushBack(const ValueType& value)
 
 void LinkedList::pushFront(const ValueType& value)
 {
-//	_head = new Node(value, _head);
-//	++_size;
-//	if(_size == 1){
-//	    _tail = _head;
-//	}
     ++_size;
     if(_size == 1){
         _head = new Node(value, _head);
@@ -234,11 +225,7 @@ void LinkedList::remove(const size_t pos){
         removeBack();
     }
     else {
-        Node* bufNode = this->_head;
-        for (size_t i = 0; i < pos - 1; ++i) {
-            bufNode = bufNode->next;
-        }
-        bufNode->removeNext();
+        getNode(pos - 1)->removeNext();
         --_size;
     }
 }
@@ -285,25 +272,13 @@ LinkedList::Node* LinkedList::findNode(const ValueType& value) const
 
 void LinkedList::reverse(){
     if(_size > 1){
-//        Node *tmp;
-//        for(int i = 0; i < _size; ++i){
-//            tmp = getNode(_size - 1);
-//            this->insert(i, tmp);
-//        }
-//        //иначе петля в последнем элементе
-//        tmp->next = nullptr;
-//
         Node* bufNode = _tail;
         //Поменяем местами хвост и голову
-//        _head->previous = _head->next;
-//        _head->next = nullptr;
         _tail->next = _tail->previous;
         _tail->previous = nullptr;
         _tail = _head;
         _head = bufNode;
-        //Node* tmpNode = nullptr;
         while(bufNode->next){
-            //tmpNode = bufNode->next->previous;
             bufNode->next->next = bufNode->next->previous;
             bufNode->next->previous = bufNode;
             bufNode = bufNode->next;
@@ -357,12 +332,7 @@ void LinkedList::insert(const size_t pos, LinkedList::Node *node) {
         pushBackNode(node);
     }
     else {
-        Node* bufNode = this->_head;
-        for (size_t i = 0; i < pos - 1; ++i) {
-            bufNode = bufNode->next;
-        }
-        bufNode->insertNext(node);
-
+        getNode(pos - 1)->insertNext(node);
     }
 }
 
